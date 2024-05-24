@@ -55,6 +55,7 @@ void DrawingOptions::SetDefault()
 	transparent_items = false;
 	show_ingame_box = false;
 	show_lights = false;
+	show_tech_items = false;
 	ingame = false;
 	dragging = false;
 
@@ -62,6 +63,7 @@ void DrawingOptions::SetDefault()
 	show_all_floors = true;
 	show_creatures = true;
 	show_spawns = true;
+	show_spawn_creatureslist = true;
 	show_houses = true;
 	show_shade = true;
 	show_special_tiles = true;
@@ -86,6 +88,7 @@ void DrawingOptions::SetIngame()
 	transparent_items = false;
 	show_ingame_box = false;
 	show_lights = false;
+	show_tech_items = true;
 	ingame = true;
 	dragging = false;
 
@@ -93,6 +96,7 @@ void DrawingOptions::SetIngame()
 	show_all_floors = true;
 	show_creatures = true;
 	show_spawns = false;
+	show_spawn_creatureslist = false;
 	show_houses = false;
 	show_shade = false;
 	show_special_tiles = false;
@@ -1089,14 +1093,19 @@ void MapDrawer::BlitItem(int& draw_x, int& draw_y, const Tile* tile, const Item*
 	}
 
 	// Ugly hacks. :)
-	if(type.id == 459 && !options.ingame) {
+	if(type.id == 459 && !options.ingame && options.show_tech_items) {
 		glDisable(GL_TEXTURE_2D);
-		glBlitSquare(draw_x, draw_y, red, green, 0, alpha/3*2);
+		glBlitSquare(draw_x, draw_y, red, green, 0, alpha / 3 * 2);
 		glEnable(GL_TEXTURE_2D);
 		return;
-	} else if(type.id == 460 && !options.ingame) {
+	} else if(type.id == 460 && !options.ingame && options.show_tech_items) {
 		glDisable(GL_TEXTURE_2D);
-		glBlitSquare(draw_x, draw_y, red, 0, 0, alpha/3*2);
+		glBlitSquare(draw_x, draw_y, red, 0, 0, alpha / 3 * 2);
+		glEnable(GL_TEXTURE_2D);
+		return;
+	} else if(type.id == 1548 && !options.ingame && options.show_tech_items) {
+		glDisable(GL_TEXTURE_2D);
+		glBlitSquare(draw_x, draw_y, 0, green, blue, 80);
 		glEnable(GL_TEXTURE_2D);
 		return;
 	}
@@ -1669,6 +1678,32 @@ void MapDrawer::DrawTileIndicators(TileLocation* location)
 			DrawIndicator(x, y, EDITOR_SPRITE_SPAWNS, 128, 128, 128);
 		} else {
 			DrawIndicator(x, y, EDITOR_SPRITE_SPAWNS);
+		}
+		
+		if(options.show_spawn_creatureslist) {
+			int32_t radius = tile->spawn->getSize();
+			std::unordered_map<std::string, int32_t> creatureCount;
+
+			const Position& spawnPosition = tile->getPosition();
+
+			for (int32_t dy = -radius; dy <= radius; ++dy) {
+				for (int32_t dx = -radius; dx <= radius; ++dx) {
+					Tile* creature_tile = editor.getMap().getTile(spawnPosition + Position(dx, dy, 0));
+					if (creature_tile) {
+						Creature* creature = creature_tile->creature;
+						if (creature) {
+							++creatureCount[creature->getName()];
+						}
+					}
+				}
+			}
+
+			std::string monsterText = "";
+			for (const auto& creature : creatureCount) {
+				monsterText += creature.first + " " + std::to_string(creature.second) + "x\n";
+			}
+
+			MakeTooltip(x, y, monsterText);
 		}
 	}
 }

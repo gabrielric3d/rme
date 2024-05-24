@@ -61,6 +61,7 @@ public:
 	bool transparent_items;
 	bool show_ingame_box;
 	bool show_lights;
+	bool show_tech_items;
 	bool ingame;
 	bool dragging;
 
@@ -68,6 +69,7 @@ public:
 	bool show_all_floors;
 	bool show_creatures;
 	bool show_spawns;
+	bool show_spawn_creatureslist;
 	bool show_houses;
 	bool show_shade;
 	bool show_special_tiles;
